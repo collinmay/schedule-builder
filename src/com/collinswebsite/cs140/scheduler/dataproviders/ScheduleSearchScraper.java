@@ -1,0 +1,148 @@
+package com.collinswebsite.cs140.scheduler.dataproviders;
+
+import com.collinswebsite.cs140.scheduler.Course;
+import com.collinswebsite.cs140.scheduler.Section;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.body.MultipartBody;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+// Thanks to this article:
+//   https://blog.scrapinghub.com/2016/04/20/scrapy-tips-from-the-pros-april-2016-edition
+public class ScheduleSearchScraper {
+    private static final String SCHEDULE_SEARCH_URL = "https://mywcc.whatcom.edu/ScheduleSearch/ScheduleSearch.aspx";
+    private static final String SEARCH_RESULTS_URL = "https://mywcc.whatcom.edu/ScheduleSearch/SearchResults.aspx";
+    private static final Map<String, String> defaultParameters = new TreeMap<>();
+    private static final Pattern guidPattern = Pattern.compile("guid: '([0-9a-f\\-]+)'");
+    private static final Pattern sectionPattern = Pattern.compile("\\A([A-Z\\-]+ *&? *[0-9A-Z]+) +(.*)\\z");
+    private String viewstate = null;
+    private String viewstategenerator = null;
+    private String eventvalidation = null;
+
+    public ScheduleSearchScraper() throws ScrapingException {
+        // send off a first request to populate viewstate
+        try {
+            HttpResponse<String> response = Unirest.get(SCHEDULE_SEARCH_URL).asString();
+            Document doc = Jsoup.parse(response.getBody());
+            mutateViewState(doc);
+        } catch(UnirestException e) {
+            throw new ScrapingException(e);
+        }
+
+        defaultParameters.put("ctl00$FeaturedContent$Quarter", "B893");
+        defaultParameters.put("ctl00$FeaturedContent$ClassStatus", "");
+        defaultParameters.put("ctl00$FeaturedContent$CourseNumber", "");
+        defaultParameters.put("ctl00$FeaturedContent$ClassTitle", "");
+        defaultParameters.put("ctl00$FeaturedContent$Department", "");
+        defaultParameters.put("ctl00$FeaturedContent$Designator", "");
+        defaultParameters.put("ctl00$FeaturedContent$ItemNumber", "");
+        defaultParameters.put("ctl00$FeaturedContent$SearchButton", "Search");
+        defaultParameters.put("ctl00$FeaturedContent$Wdgs", "");
+    }
+
+    public List<Section> scrape(String quarter) throws ScrapingException {
+        // TODO: quarter
+
+        Map<String, Course> courses = new HashMap<>();
+
+        Element table = sendRequest(null).getElementById("FeaturedContent_resultsTable");
+        table.getElementsByTag("tbody").first().children().forEach((row) -> {
+            List<String> fields = row.children().eachText();
+            int lineNo = Integer.parseInt(fields.get(0));
+            String title = fields.get(1);
+
+            Matcher m = sectionPattern.matcher(fields.get(2));
+            if(!m.find()) {
+                System.out.println("invalid section: " + fields.get(2));
+                return;
+            }
+            System.out.println("found section: course " + m.group(1) + " sec " + m.group(2));
+        });
+        return null;
+    }
+
+    private Document sendRequest(Map<String, String> parameters) throws ScrapingException {
+        try {
+            // set up form values
+            Map<String, Object> formData = new TreeMap<>();
+            defaultParameters.forEach(formData::putIfAbsent); // add default form values
+            if (parameters != null) {
+                parameters.forEach(formData::putIfAbsent); // add user form values
+            }
+
+            // submit form
+            Document intermediate = Jsoup.parse(addHeaders(Unirest.post(SCHEDULE_SEARCH_URL).fields(formData)).asString().getBody());
+
+            // this takes us to a "Retrieving results" page that uses some javascript to redirect to the actual results
+            String javascript = intermediate.getElementById("ctl01").getElementsByTag("script").first().data();
+
+            // pull the request guid out of the javascript
+            Matcher m = guidPattern.matcher(javascript);
+            if(!m.find()) {
+                System.out.println("bad javascript: " + javascript);
+                throw new InvalidPageException();
+            }
+            String guid = m.group(1);
+
+            // actually get our results
+            return Jsoup.parse(Unirest.post(SEARCH_RESULTS_URL).field("guid", guid).asString().getBody());
+        } catch(UnirestException e) {
+            throw new ScrapingException(e);
+        }
+    }
+
+    private MultipartBody addHeaders(MultipartBody body) {
+        body.field("__EVENTTARGET", "");
+        body.field("__EVENTARGUMENT", "");
+        if(viewstate != null) {
+            body.field("__VIEWSTATE", viewstate);
+        }
+        if(viewstategenerator != null) {
+            body.field("__VIEWSTATEGENERATOR", viewstategenerator);
+        }
+        if(eventvalidation != null) {
+            body.field("__EVENTVALIDATION", eventvalidation);
+        }
+        return body;
+    }
+
+    private Document mutateViewState(Document doc) {
+        viewstate = doc.getElementById("__VIEWSTATE").attributes().get("value");
+        viewstategenerator = doc.getElementById("__VIEWSTATEGENERATOR").attributes().get("value");
+        eventvalidation = doc.getElementById("__EVENTVALIDATION").attributes().get("value");
+
+        return doc;
+    }
+
+    public class ScrapingException extends Exception {
+        public ScrapingException(Exception e) {
+            super(e);
+        }
+        public ScrapingException(String s) {
+            super(s);
+        }
+        public ScrapingException() {
+
+        }
+    }
+
+    public class InvalidPageException extends ScrapingException {
+
+    }
+
+    public class InvalidSectionException extends ScrapingException {
+        public InvalidSectionException(String section) {
+            super("Invalid section: " + section);
+        }
+    }
+}
