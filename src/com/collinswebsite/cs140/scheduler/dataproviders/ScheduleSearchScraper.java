@@ -10,24 +10,23 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Thanks to this article:
-//   https://blog.scrapinghub.com/2016/04/20/scrapy-tips-from-the-pros-april-2016-edition
-public class ScheduleSearchScraper {
+/**
+ * A DataProvider implementation that rips lists of courses and sections from the Schedule Search web application.
+ */
+public class ScheduleSearchScraper implements DataProvider {
     private static final String SCHEDULE_SEARCH_URL = "https://mywcc.whatcom.edu/ScheduleSearch/ScheduleSearch.aspx";
     private static final String SEARCH_RESULTS_URL = "https://mywcc.whatcom.edu/ScheduleSearch/SearchResults.aspx";
     private static final Map<String, String> defaultParameters = new TreeMap<>();
     private static final Pattern guidPattern = Pattern.compile("guid: '([0-9a-f\\-]+)'");
     private static final Pattern sectionPattern = Pattern.compile("\\A([A-Z\\-]+ *&? *[0-9A-Z]+) +(.*)\\z");
-    private String viewstate = null;
-    private String viewstategenerator = null;
-    private String eventvalidation = null;
+
+    private String viewstate;
+    private String viewstategenerator;
+    private String eventvalidation;
 
     public ScheduleSearchScraper() throws DataRetrievalException {
         // send off a first request to populate viewstate
@@ -50,7 +49,8 @@ public class ScheduleSearchScraper {
         defaultParameters.put("ctl00$FeaturedContent$Wdgs", "");
     }
 
-    public List<Section> scrape(String quarter) throws DataRetrievalException {
+    @Override
+    public Map<String, Course> getCourseList() throws DataRetrievalException {
         // TODO: quarter
 
         Map<String, Course> courses = new HashMap<>();
@@ -66,9 +66,20 @@ public class ScheduleSearchScraper {
                 System.out.println("invalid section: " + fields.get(2));
                 return;
             }
-            System.out.println("found section: course " + m.group(1) + " sec " + m.group(2));
+
+            String normalizedCourseId = Course.normalizeCourseId(m.group(1));
+
+            Course course;
+            if(courses.containsKey(normalizedCourseId)) {
+                course = courses.get(normalizedCourseId);
+            } else {
+                course = new Course(normalizedCourseId, title);
+                courses.put(normalizedCourseId, course);
+            }
+            course.addSection(new Section(course, lineNo, m.group(2)));
         });
-        return null;
+
+        return courses;
     }
 
     private Document sendRequest(Map<String, String> parameters) throws DataRetrievalException {
