@@ -29,14 +29,14 @@ public class ScheduleSearchScraper {
     private String viewstategenerator = null;
     private String eventvalidation = null;
 
-    public ScheduleSearchScraper() throws ScrapingException {
+    public ScheduleSearchScraper() throws DataRetrievalException {
         // send off a first request to populate viewstate
         try {
             HttpResponse<String> response = Unirest.get(SCHEDULE_SEARCH_URL).asString();
             Document doc = Jsoup.parse(response.getBody());
             mutateViewState(doc);
         } catch(UnirestException e) {
-            throw new ScrapingException(e);
+            throw new DataRetrievalException(e);
         }
 
         defaultParameters.put("ctl00$FeaturedContent$Quarter", "B893");
@@ -50,7 +50,7 @@ public class ScheduleSearchScraper {
         defaultParameters.put("ctl00$FeaturedContent$Wdgs", "");
     }
 
-    public List<Section> scrape(String quarter) throws ScrapingException {
+    public List<Section> scrape(String quarter) throws DataRetrievalException {
         // TODO: quarter
 
         Map<String, Course> courses = new HashMap<>();
@@ -71,7 +71,7 @@ public class ScheduleSearchScraper {
         return null;
     }
 
-    private Document sendRequest(Map<String, String> parameters) throws ScrapingException {
+    private Document sendRequest(Map<String, String> parameters) throws DataRetrievalException {
         try {
             // set up form values
             Map<String, Object> formData = new TreeMap<>();
@@ -97,7 +97,7 @@ public class ScheduleSearchScraper {
             // actually get our results
             return Jsoup.parse(Unirest.post(SEARCH_RESULTS_URL).field("guid", guid).asString().getBody());
         } catch(UnirestException e) {
-            throw new ScrapingException(e);
+            throw new DataRetrievalException(e);
         }
     }
 
@@ -124,23 +124,11 @@ public class ScheduleSearchScraper {
         return doc;
     }
 
-    public class ScrapingException extends Exception {
-        public ScrapingException(Exception e) {
-            super(e);
-        }
-        public ScrapingException(String s) {
-            super(s);
-        }
-        public ScrapingException() {
-
-        }
-    }
-
-    public class InvalidPageException extends ScrapingException {
+    public class InvalidPageException extends DataRetrievalException {
 
     }
 
-    public class InvalidSectionException extends ScrapingException {
+    public class InvalidSectionException extends DataRetrievalException {
         public InvalidSectionException(String section) {
             super("Invalid section: " + section);
         }
