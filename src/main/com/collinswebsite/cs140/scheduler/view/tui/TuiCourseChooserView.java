@@ -6,6 +6,9 @@ import com.collinswebsite.cs140.scheduler.view.CourseChooserView;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A text-based implementation of CourseChooserView
+ */
 public class TuiCourseChooserView implements CourseChooserView {
     private final Scanner scanner;
 

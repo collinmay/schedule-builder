@@ -9,7 +9,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public class SchedulerApplication {
     public static void main(String[] args) throws UnirestException, DataRetrievalException {
