@@ -29,7 +29,7 @@ public class Course {
      * both become "MATH&163".
      */
     public static String normalizeCourseId(String id) {
-        return id.replaceAll(" ", "");
+        return id.replaceAll(" ", "").toUpperCase();
     }
 
     /**
