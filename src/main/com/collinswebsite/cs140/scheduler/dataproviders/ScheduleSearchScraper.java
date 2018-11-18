@@ -2,6 +2,8 @@ package com.collinswebsite.cs140.scheduler.dataproviders;
 
 import com.collinswebsite.cs140.scheduler.Course;
 import com.collinswebsite.cs140.scheduler.Section;
+import com.collinswebsite.cs140.scheduler.TimeBlock;
+import com.collinswebsite.cs140.scheduler.Weekday;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -23,6 +25,8 @@ public class ScheduleSearchScraper implements DataProvider {
     private static final Map<String, String> defaultParameters = new TreeMap<>();
     private static final Pattern guidPattern = Pattern.compile("guid: '([0-9a-f\\-]+)'");
     private static final Pattern sectionPattern = Pattern.compile("\\A([A-Z\\-]+ *&? *[0-9A-Z]+) +(.*)\\z");
+    private static final Pattern weekdayPattern = Pattern.compile("(Th|M|T|W|F|Sa|Su)"); // Th needs to be before T to match properly
+    private static final Pattern timePattern = Pattern.compile("((?:Th|M|T|W|F|Sa|Su)+) ([0-9][0-9]):([0-9][0-9])([AP])-([0-9][0-9]):([0-9][0-9])([AP])");
 
     private String viewstate;
     private String viewstategenerator;
@@ -56,15 +60,14 @@ public class ScheduleSearchScraper implements DataProvider {
         Map<String, Course> courses = new HashMap<>();
 
         Element table = sendRequest(null).getElementById("FeaturedContent_resultsTable");
-        table.getElementsByTag("tbody").first().children().forEach((row) -> {
+        for(Element row : table.getElementsByTag("tbody").first().children()) {
             List<String> fields = row.children().eachText();
             int lineNo = Integer.parseInt(fields.get(0));
             String title = fields.get(1);
 
             Matcher m = sectionPattern.matcher(fields.get(2));
             if(!m.find()) {
-                System.out.println("invalid section: " + fields.get(2));
-                return;
+                throw new InvalidSectionException(fields.get(2));
             }
 
             String normalizedCourseId = Course.normalizeCourseId(m.group(1));
@@ -76,8 +79,39 @@ public class ScheduleSearchScraper implements DataProvider {
                 course = new Course(normalizedCourseId, title);
                 courses.put(normalizedCourseId, course);
             }
-            course.addSection(new Section(course, lineNo, m.group(2)));
-        });
+
+            Section section = new Section(course, lineNo, m.group(2), Section.Type.getByName(fields.get(6)));
+
+            if(section.getType() == Section.Type.STANDARD) {
+                Matcher tm = timePattern.matcher(fields.get(5)); // parse schedule
+                while(tm.find()) {
+                    String weekdays = tm.group(1);
+                    int begHour = Integer.parseInt(tm.group(2));
+                    int begMin = Integer.parseInt(tm.group(3));
+                    String begAmPm = tm.group(4);
+                    int endHour = Integer.parseInt(tm.group(5));
+                    int endMin = Integer.parseInt(tm.group(6));
+                    String endAmPm = tm.group(7);
+
+                    // convert to military time for easier processing
+                    if(begAmPm.equals("P")) {
+                        begHour += 12;
+                    }
+                    if(endAmPm.equals("P")) {
+                        endHour += 12;
+                    }
+
+                    TimeBlock block = new TimeBlock(begHour, begMin, endHour, endMin);
+
+                    Matcher wm = weekdayPattern.matcher(weekdays);
+                    while(wm.find()) {
+                        section.addTime(Weekday.findByShortName(wm.group()), block);
+                    }
+                }
+            }
+
+            course.addSection(section);
+        }
 
         return courses;
     }

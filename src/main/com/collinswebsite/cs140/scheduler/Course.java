@@ -1,6 +1,7 @@
 package com.collinswebsite.cs140.scheduler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 

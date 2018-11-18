@@ -26,7 +26,7 @@ public class CourseTest {
     @Test
     void getSections() {
         Course c = new Course("TEST 101", "TEST COURSE");
-        Section section = new Section(c, 0, "A");
+        Section section = new Section(c, 0, "A", Section.Type.UNKNOWN);
         c.addSection(section);
         assertIterableEquals(c.getSections(), Collections.singleton(section));
     }
