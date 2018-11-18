@@ -17,5 +17,6 @@ public class SchedulerApplication {
 
         CourseChooserView chooser = new TuiCourseChooserView();
         Set<Course> selectedCourses = chooser.chooseCourses(courses);
+        Schedule.generateCombinations(selectedCourses);
     }
 }

@@ -1,8 +1,6 @@
 package com.collinswebsite.cs140.scheduler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -50,15 +48,17 @@ public class Course {
     /**
      * Adds a section offering to this course object. The section's course field should match this course.
      * @param section Section of this course to add
+     * @return The section added.
      */
-    public void addSection(Section section) {
+    public Section addSection(Section section) {
         sections.add(section);
+        return section;
     }
 
     /**
      * @return A collection of the various different sections for this course.
      */
-    public Collection<Section> getSections() {
+    public List<Section> getSections() {
         return sections;
     }
 }
