@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -57,5 +58,38 @@ public class Schedule {
         } else {
             return false;
         }
+    }
+
+    public int calculateDeadTime() {
+        return Stream.of(Weekday.values()).mapToInt((weekday) -> {
+            List<TimeBlock> times = sections.stream().flatMap((section) -> section.getTimes(weekday).stream()).sorted().collect(Collectors.toList());
+            if(times.size() <= 1) {
+                return 0;
+            }
+            int deadMinutes = 0;
+            TimeBlock last = times.get(0);
+            for(int i = 1; i < times.size(); i++) {
+                deadMinutes+= last.minutesBetween(times.get(i));
+                last = times.get(i);
+            }
+            return deadMinutes;
+        }).sum();
+    }
+
+    public boolean isValid() {
+        return Stream.of(Weekday.values()).allMatch((weekday) -> {
+           List<TimeBlock> times = sections.stream().flatMap((section) -> section.getTimes(weekday).stream()).sorted().collect(Collectors.toList());
+            if(times.size() <= 1) {
+                return true; // no conflicts possible
+            }
+            TimeBlock last = times.get(0);
+            for(int i = 1; i < times.size(); i++) {
+                if(last.overlaps(times.get(i))) {
+                    return false; // overlap conflict
+                }
+                last = times.get(i);
+            }
+            return true; // no conflict detected
+        });
     }
 }

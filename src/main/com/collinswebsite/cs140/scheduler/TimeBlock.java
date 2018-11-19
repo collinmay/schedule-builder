@@ -95,4 +95,12 @@ public class TimeBlock implements Comparable<TimeBlock> {
         TimeBlock endsLast = this.endsAfter(other.endHour, other.endMinute) ? this : other;
         return new TimeBlock(beginsFirst.beginHour, beginsFirst.beginMinute, endsLast.endHour, endsLast.endMinute);
     }
+
+    /**
+     * @param other Another time block.
+     * @return How many minutes between when this time block ends and the other one starts.
+     */
+    public int minutesBetween(TimeBlock other) {
+        return (other.beginHour - this.endHour) * 60 + (other.beginMinute - this.endMinute);
+    }
 }

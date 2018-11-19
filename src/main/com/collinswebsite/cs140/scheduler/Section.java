@@ -128,6 +128,10 @@ public class Section {
         }
     }
 
+    public Set<TimeBlock> getTimes(Weekday weekday) {
+        return meetingTimes.get(weekday);
+    }
+
     public String toString() {
         return "Section[" + lineNo + " " + course.getId() + " \"" + course.getTitle() + "\" " + id + "]";
     }

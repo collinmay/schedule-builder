@@ -105,4 +105,10 @@ class TimeBlockTest {
                         new TimeBlock(9, 44, 16, 35)
                 ));
     }
+
+    @Test
+    void minutesBetween() {
+        assertEquals(37, new TimeBlock(4, 53, 8, 23).minutesBetween(
+                new TimeBlock(9, 00, 12, 30)));
+    }
 }
