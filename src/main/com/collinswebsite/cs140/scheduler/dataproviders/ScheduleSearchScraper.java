@@ -82,7 +82,7 @@ public class ScheduleSearchScraper implements DataProvider {
 
             Section section = new Section(course, lineNo, m.group(2), Section.Type.getByName(fields.get(6)));
 
-            if(section.getType() == Section.Type.STANDARD) {
+            if(section.getType() == Section.Type.STANDARD || section.getType() == Section.Type.HYBRID) {
                 Matcher tm = timePattern.matcher(fields.get(5)); // parse schedule
                 while(tm.find()) {
                     String weekdays = tm.group(1);
@@ -110,7 +110,10 @@ public class ScheduleSearchScraper implements DataProvider {
                 }
             }
 
-            course.addSection(section);
+            // reject linked and study abroad courses
+            if(section.getType() != Section.Type.LINKED && section.getType() != Section.Type.STUDY_ABROAD) {
+                course.addSection(section);
+            }
         }
 
         return courses;
