@@ -101,7 +101,7 @@ public class ScheduleSearchScraper implements DataProvider {
                         endHour += 12;
                     }
 
-                    TimeBlock block = new TimeBlock(begHour, begMin, endHour, endMin);
+                    TimeBlock block = new TimeBlock(section, begHour, begMin, endHour, endMin);
 
                     Matcher wm = weekdayPattern.matcher(weekdays);
                     while(wm.find()) {

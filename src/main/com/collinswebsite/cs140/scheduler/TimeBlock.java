@@ -8,8 +8,29 @@ public class TimeBlock implements Comparable<TimeBlock> {
     private final int endHour;
     private final int beginMinute;
     private final int endMinute;
+    private final Section section;
 
+    /**
+     * Creates a time block with no associated section.
+     * @param beginHour Hour this time block begins in
+     * @param beginMinute Minute this time block begins at
+     * @param endHour Hour this time block ends in
+     * @param endMinute Minute this time block ends at
+     */
     public TimeBlock(int beginHour, int beginMinute, int endHour, int endMinute) {
+        this(null, beginHour, beginMinute, endHour, endMinute);
+    }
+
+    /**
+     * Creates a time block with an associated section.
+     * @param section Section this time block belongs to
+     * @param beginHour Hour this time block begins in
+     * @param beginMinute Minute this time block begins at
+     * @param endHour Hour this time block ends in
+     * @param endMinute Minute this time block ends at
+     */
+    public TimeBlock(Section section, int beginHour, int beginMinute, int endHour, int endMinute) {
+        this.section = section;
         this.beginHour = beginHour;
         this.endHour = endHour;
         this.beginMinute = beginMinute;
@@ -20,7 +41,8 @@ public class TimeBlock implements Comparable<TimeBlock> {
      * @return Formats the time block as 12:34A-04:53P
      */
     public String toString() {
-        return String.format("%02d:%02d%s-%02d:%02d%s",
+        return String.format("%s%02d:%02d%s-%02d:%02d%s",
+                section == null ? "" : (section.toString() + " "),
                 Math.floorMod(beginHour - 1, 12) + 1, // floorMod used here to fix edge case for midnight (-1 % 12 = -1, not 11)
                 beginMinute,
                 beginHour >= 12 ? "P" : "A",
@@ -72,7 +94,7 @@ public class TimeBlock implements Comparable<TimeBlock> {
         }
         TimeBlock other = (TimeBlock) otherObject;
         return beginHour == other.beginHour && beginMinute == other.beginMinute &&
-                endHour == other.endHour && endMinute == other.endMinute;
+                endHour == other.endHour && endMinute == other.endMinute && section == other.section;
     }
 
     @Override
@@ -102,5 +124,12 @@ public class TimeBlock implements Comparable<TimeBlock> {
      */
     public int minutesBetween(TimeBlock other) {
         return (other.beginHour - this.endHour) * 60 + (other.beginMinute - this.endMinute);
+    }
+
+    /**
+     * @return The section associated with this time block, or null if there is none.
+     */
+    public Section getSection() {
+        return section;
     }
 }
