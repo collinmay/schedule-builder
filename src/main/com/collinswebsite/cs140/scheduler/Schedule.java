@@ -60,9 +60,13 @@ public class Schedule {
         }
     }
 
+    public Stream<TimeBlock> timesOn(Weekday weekday) {
+        return sections.stream().flatMap((section) -> section.getTimes(weekday).stream()).sorted();
+    }
+
     public int calculateDeadTime() {
         return Stream.of(Weekday.values()).mapToInt((weekday) -> {
-            List<TimeBlock> times = sections.stream().flatMap((section) -> section.getTimes(weekday).stream()).sorted().collect(Collectors.toList());
+            List<TimeBlock> times = timesOn(weekday).collect(Collectors.toList());
             if(times.size() <= 1) {
                 return 0;
             }
@@ -78,7 +82,7 @@ public class Schedule {
 
     public boolean isValid() {
         return Stream.of(Weekday.values()).allMatch((weekday) -> {
-           List<TimeBlock> times = sections.stream().flatMap((section) -> section.getTimes(weekday).stream()).sorted().collect(Collectors.toList());
+           List<TimeBlock> times = timesOn(weekday).collect(Collectors.toList());
             if(times.size() <= 1) {
                 return true; // no conflicts possible
             }
