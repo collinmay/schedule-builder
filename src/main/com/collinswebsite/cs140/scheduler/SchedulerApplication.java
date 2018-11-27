@@ -9,7 +9,6 @@ import com.collinswebsite.cs140.scheduler.view.tui.TuiCourseChooserView;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public class SchedulerApplication {
     public static void main(String[] args) throws DataRetrievalException {
@@ -18,12 +17,7 @@ public class SchedulerApplication {
 
         CourseChooserView chooser = new TuiCourseChooserView();
         Set<Course> selectedCourses = chooser.chooseCourses(courses);
-        Schedule.generateCombinations(selectedCourses).filter(Schedule::isValid).sorted(Comparator.comparingInt(Schedule::calculateDeadTime)).limit(10).forEach((s) -> {
-            System.out.println(s.toString() + " -> " + s.calculateDeadTime() / 60.0 + " dead hours");
-            Stream.of(Weekday.values()).forEach((weekday) -> {
-                System.out.println("  " + weekday.getLongName() + ":");
-                s.timesOn(weekday).forEach((tb) -> System.out.println("    " + tb));
-            });
-        });
+
+        Parameters params = new Parameters(selectedCourses, Comparator.comparingInt(Schedule::calculateDeadTime));
     }
 }

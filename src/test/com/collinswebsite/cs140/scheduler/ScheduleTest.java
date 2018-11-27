@@ -4,10 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class ScheduleTest {
     @Test
@@ -30,17 +32,17 @@ class ScheduleTest {
         Section test102b = test102.addSection(new Section(test102, 4, "B", Section.Type.STANDARD));
         Section test102c = test102.addSection(new Section(test102, 5, "C", Section.Type.STANDARD));
 
-        Set<Course> courses = new HashSet<>(Arrays.asList(test101, test102));
+        List<Course> courses = Arrays.asList(test101, test102);
 
         assertEquals(Arrays.asList(
                 new Schedule(Arrays.asList(test101a, test102a)),
-                new Schedule(Arrays.asList(test101a, test102b)),
-                new Schedule(Arrays.asList(test101a, test102c)),
                 new Schedule(Arrays.asList(test101b, test102a)),
+                new Schedule(Arrays.asList(test101a, test102b)),
                 new Schedule(Arrays.asList(test101b, test102b)),
+                new Schedule(Arrays.asList(test101a, test102c)),
                 new Schedule(Arrays.asList(test101b, test102c))
                 ),
-                Schedule.generateCombinations(courses).collect(Collectors.toList()));
+                Schedule.generateCombinations(courses.stream().map(Course::getSections).collect(Collectors.toList())).collect(Collectors.toList()));
     }
 
     @Test

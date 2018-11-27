@@ -23,18 +23,17 @@ public class Schedule {
     }
 
     /**
-     * @param courses Courses to generate schedules with
+     * @param courses Sections to generate schedules with, grouped by course
      * @return A stream of all possible combinations of sections between the given courses
      */
-    public static Stream<Schedule> generateCombinations(Set<Course> courses) {
-        List<Course> courseList = new ArrayList<>(courses);
-        int numCombinations = courseList.stream().mapToInt((c) -> c.getSections().size()).reduce(1, (a, b) -> a * b);
+    public static Stream<Schedule> generateCombinations(List<List<Section>> courseList) {
+        int numCombinations = courseList.stream().mapToInt((c) -> c.size()).reduce(1, (a, b) -> a * b);
         return IntStream.range(0, numCombinations).mapToObj((index) -> {
            Set<Section> sectionList = new HashSet<>(courseList.size());
            while(sectionList.size() < courseList.size()) {
-               Course c = courseList.get(sectionList.size());
-               sectionList.add(c.getSections().get(index % c.getSections().size()));
-               index/= c.getSections().size();
+               List<Section> c = courseList.get(sectionList.size());
+               sectionList.add(c.get(index % c.size()));
+               index/= c.size();
            }
            return new Schedule(sectionList);
         });
