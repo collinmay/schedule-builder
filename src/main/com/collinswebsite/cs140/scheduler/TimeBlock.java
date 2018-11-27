@@ -132,4 +132,32 @@ public class TimeBlock implements Comparable<TimeBlock> {
     public Section getSection() {
         return section;
     }
+
+    /**
+     * @return The hour this time block begins in (0-23)
+     */
+    public int getBeginHour() {
+        return beginHour;
+    }
+
+    /**
+     * @return The hour this time block ends in (0-23)
+     */
+    public int getEndHour() {
+        return endHour;
+    }
+
+    /**
+     * @return The minute within the hour this time block begins at (0-59)
+     */
+    public int getBeginMinute() {
+        return beginMinute;
+    }
+
+    /**
+     * @return The minute within the hour this time block ends at (0-59)
+     */
+    public int getEndMinute() {
+        return endMinute;
+    }
 }

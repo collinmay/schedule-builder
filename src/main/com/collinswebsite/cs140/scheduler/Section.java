@@ -133,6 +133,10 @@ public class Section {
     }
 
     public String toString() {
-        return "Section[" + lineNo + " " + course.getId() + " \"" + course.getTitle() + "\" " + id + "]";
+        return lineNo + " " + course.getId() + " \"" + course.getTitle() + "\" " + id;
+    }
+
+    public String formatShort() {
+        return course.getId() + " " + id;
     }
 }

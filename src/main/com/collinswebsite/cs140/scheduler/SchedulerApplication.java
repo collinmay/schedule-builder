@@ -4,7 +4,9 @@ import com.collinswebsite.cs140.scheduler.dataproviders.DataProvider;
 import com.collinswebsite.cs140.scheduler.dataproviders.DataRetrievalException;
 import com.collinswebsite.cs140.scheduler.dataproviders.ScheduleSearchScraper;
 import com.collinswebsite.cs140.scheduler.view.CourseChooserView;
+import com.collinswebsite.cs140.scheduler.view.SchedulePresentationView;
 import com.collinswebsite.cs140.scheduler.view.tui.TuiCourseChooserView;
+import com.collinswebsite.cs140.scheduler.view.tui.TuiSchedulePresentationView;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -19,5 +21,7 @@ public class SchedulerApplication {
         Set<Course> selectedCourses = chooser.chooseCourses(courses);
 
         Parameters params = new Parameters(selectedCourses, Comparator.comparingInt(Schedule::calculateDeadTime));
+        SchedulePresentationView presenter = new TuiSchedulePresentationView();
+        presenter.present(params);
     }
 }

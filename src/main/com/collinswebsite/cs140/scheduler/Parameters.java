@@ -1,5 +1,6 @@
 package com.collinswebsite.cs140.scheduler;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +19,26 @@ public class Parameters {
         this.comparator = comparator;
     }
 
+    /**
+     * @return A stream of valid schedules in order by the current parameters
+     */
     public Stream<Schedule> produceStream() {
         return Schedule.generateCombinations(selectedSections).filter(Schedule::isValid).sorted(comparator);
+    }
+
+    /**
+     * @param lineNumber Line number to look up section by
+     * @return Section with the given line number, or null if none was found
+     */
+    public Section getSectionByLineNumber(int lineNumber) {
+        return selectedSections.stream().flatMap(Collection::stream).filter((s) -> s.getLineNumber() == lineNumber).findFirst().orElse(null);
+    }
+
+    /**
+     * Removes a specific section from consideration
+     * @param section Section to remove
+     */
+    public void reject(Section section) {
+        selectedSections.forEach((list) -> list.remove(section));
     }
 }
