@@ -26,7 +26,7 @@ public class ScheduleSearchScraper implements DataProvider {
     private static final Pattern guidPattern = Pattern.compile("guid: '([0-9a-f\\-]+)'");
     private static final Pattern sectionPattern = Pattern.compile("\\A([A-Z\\-]+ *&? *[0-9A-Z]+) +(.*)\\z");
     private static final Pattern weekdayPattern = Pattern.compile("(Th|M|T|W|F|Sa|Su)"); // Th needs to be before T to match properly
-    private static final Pattern timePattern = Pattern.compile("((?:Th|M|T|W|F|Sa|Su)+) ([0-9][0-9]):([0-9][0-9])([AP])-([0-9][0-9]):([0-9][0-9])([AP])");
+    private static final Pattern timePattern = Pattern.compile("((?:Th|M|T|W|F|Sa|Su)+|DAILY) ([0-9][0-9]):([0-9][0-9])([AP])-([0-9][0-9]):([0-9][0-9])([AP])");
 
     private String viewstate;
     private String viewstategenerator;
@@ -103,10 +103,15 @@ public class ScheduleSearchScraper implements DataProvider {
                 }
 
                 TimeBlock block = new TimeBlock(section, begHour, begMin, endHour, endMin);
-
-                Matcher wm = weekdayPattern.matcher(weekdays);
-                while(wm.find()) {
-                    section.addTime(Weekday.findByShortName(wm.group()), block);
+                if(weekdays.equals("DAILY")) {
+                    for(Weekday wk : Weekday.getWeekdays()) {
+                        section.addTime(wk, block);
+                    }
+                } else {
+                    Matcher wm = weekdayPattern.matcher(weekdays);
+                    while(wm.find()) {
+                        section.addTime(Weekday.findByShortName(wm.group()), block);
+                    }
                 }
             }
         }
