@@ -53,6 +53,66 @@ public class ScheduleSearchScraper implements DataProvider {
         defaultParameters.put("ctl00$FeaturedContent$Wdgs", "");
     }
 
+    /**
+     * @param courses The map of currently known courses.
+     *                This function may add a new element to the map if the section's course is not yet known.
+     * @param fields The fields from the schedule search table.
+     *               Expects [Item, Title, Section, Credits, Status, Day/Time, Type, Room, Instructor]
+     * @return A section, parsed from the given fields.
+     * @throws InvalidSectionException
+     * Note that the returned section is not automatically added to its course.
+     */
+    public Section parseSection(Map<String, Course> courses, List<String> fields) throws InvalidSectionException {
+        int lineNo = Integer.parseInt(fields.get(0));
+        String title = fields.get(1);
+
+        Matcher m = sectionPattern.matcher(fields.get(2));
+        if(!m.find()) {
+            throw new InvalidSectionException(fields.get(2));
+        }
+
+        String normalizedCourseId = Course.normalizeCourseId(m.group(1));
+
+        Course course;
+        if(courses.containsKey(normalizedCourseId)) {
+            course = courses.get(normalizedCourseId);
+        } else {
+            course = new Course(normalizedCourseId, title);
+            courses.put(normalizedCourseId, course);
+        }
+
+        Section section = new Section(course, lineNo, m.group(2), Section.Type.getByName(fields.get(6)));
+
+        if(section.getType() == Section.Type.STANDARD || section.getType() == Section.Type.HYBRID) {
+            Matcher tm = timePattern.matcher(fields.get(5)); // parse schedule
+            while(tm.find()) {
+                String weekdays = tm.group(1);
+                int begHour = Integer.parseInt(tm.group(2));
+                int begMin = Integer.parseInt(tm.group(3));
+                String begAmPm = tm.group(4);
+                int endHour = Integer.parseInt(tm.group(5));
+                int endMin = Integer.parseInt(tm.group(6));
+                String endAmPm = tm.group(7);
+
+                // convert to military time for easier processing
+                if(begAmPm.equals("P")) {
+                    begHour += 12;
+                }
+                if(endAmPm.equals("P")) {
+                    endHour += 12;
+                }
+
+                TimeBlock block = new TimeBlock(section, begHour, begMin, endHour, endMin);
+
+                Matcher wm = weekdayPattern.matcher(weekdays);
+                while(wm.find()) {
+                    section.addTime(Weekday.findByShortName(wm.group()), block);
+                }
+            }
+        }
+        return section;
+    }
+
     @Override
     public Map<String, Course> getCourseList() throws DataRetrievalException {
         // TODO: quarter
@@ -61,58 +121,11 @@ public class ScheduleSearchScraper implements DataProvider {
 
         Element table = sendRequest(null).getElementById("FeaturedContent_resultsTable");
         for(Element row : table.getElementsByTag("tbody").first().children()) {
-            List<String> fields = row.children().eachText();
-            int lineNo = Integer.parseInt(fields.get(0));
-            String title = fields.get(1);
-
-            Matcher m = sectionPattern.matcher(fields.get(2));
-            if(!m.find()) {
-                throw new InvalidSectionException(fields.get(2));
-            }
-
-            String normalizedCourseId = Course.normalizeCourseId(m.group(1));
-
-            Course course;
-            if(courses.containsKey(normalizedCourseId)) {
-                course = courses.get(normalizedCourseId);
-            } else {
-                course = new Course(normalizedCourseId, title);
-                courses.put(normalizedCourseId, course);
-            }
-
-            Section section = new Section(course, lineNo, m.group(2), Section.Type.getByName(fields.get(6)));
-
-            if(section.getType() == Section.Type.STANDARD || section.getType() == Section.Type.HYBRID) {
-                Matcher tm = timePattern.matcher(fields.get(5)); // parse schedule
-                while(tm.find()) {
-                    String weekdays = tm.group(1);
-                    int begHour = Integer.parseInt(tm.group(2));
-                    int begMin = Integer.parseInt(tm.group(3));
-                    String begAmPm = tm.group(4);
-                    int endHour = Integer.parseInt(tm.group(5));
-                    int endMin = Integer.parseInt(tm.group(6));
-                    String endAmPm = tm.group(7);
-
-                    // convert to military time for easier processing
-                    if(begAmPm.equals("P")) {
-                        begHour += 12;
-                    }
-                    if(endAmPm.equals("P")) {
-                        endHour += 12;
-                    }
-
-                    TimeBlock block = new TimeBlock(section, begHour, begMin, endHour, endMin);
-
-                    Matcher wm = weekdayPattern.matcher(weekdays);
-                    while(wm.find()) {
-                        section.addTime(Weekday.findByShortName(wm.group()), block);
-                    }
-                }
-            }
+            Section section = parseSection(courses, row.children().eachText());
 
             // reject linked and study abroad courses
             if(section.getType() != Section.Type.LINKED && section.getType() != Section.Type.STUDY_ABROAD) {
-                course.addSection(section);
+                section.getCourse().addSection(section);
             }
         }
 
