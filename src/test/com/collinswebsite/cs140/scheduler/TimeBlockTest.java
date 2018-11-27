@@ -18,7 +18,7 @@ class TimeBlockTest {
         TimeBlock block = new TimeBlock(4, 53, 8, 23);
         assertTrue(block.beginsBefore(9, 23));
         assertTrue(block.beginsBefore(4, 54));
-        assertFalse(block.beginsBefore(4, 53));
+        assertTrue(block.beginsBefore(4, 53));
         assertFalse(block.beginsBefore(4, 52));
         assertFalse(block.beginsBefore(3, 30));
     }
@@ -28,7 +28,7 @@ class TimeBlockTest {
         TimeBlock block = new TimeBlock(4, 53, 8, 23);
         assertTrue(block.endsAfter(7, 23));
         assertTrue(block.endsAfter(8, 22));
-        assertFalse(block.endsAfter(8, 23));
+        assertTrue(block.endsAfter(8, 23));
         assertFalse(block.endsAfter(8, 24));
         assertFalse(block.endsAfter(9, 15));
     }

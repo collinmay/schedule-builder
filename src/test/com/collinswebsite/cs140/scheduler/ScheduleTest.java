@@ -34,10 +34,10 @@ class ScheduleTest {
 
         assertEquals(Arrays.asList(
                 new Schedule(Arrays.asList(test101a, test102a)),
-                new Schedule(Arrays.asList(test101b, test102a)),
                 new Schedule(Arrays.asList(test101a, test102b)),
-                new Schedule(Arrays.asList(test101b, test102b)),
                 new Schedule(Arrays.asList(test101a, test102c)),
+                new Schedule(Arrays.asList(test101b, test102a)),
+                new Schedule(Arrays.asList(test101b, test102b)),
                 new Schedule(Arrays.asList(test101b, test102c))
                 ),
                 Schedule.generateCombinations(courses).collect(Collectors.toList()));
