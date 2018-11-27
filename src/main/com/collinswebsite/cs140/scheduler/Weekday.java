@@ -40,6 +40,13 @@ public enum Weekday {
         return longName;
     }
 
+    /**
+     * @return An array containing Monday through Friday, but neither Saturday nor Sunday
+     */
+    public static Weekday[] getWeekdays() {
+        return new Weekday[] {MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY};
+    }
+
     public static class NoSuchWeekdayError extends RuntimeException {
     }
 }
