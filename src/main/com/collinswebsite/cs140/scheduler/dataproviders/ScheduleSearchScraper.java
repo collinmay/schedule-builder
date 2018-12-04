@@ -138,7 +138,7 @@ public class ScheduleSearchScraper implements DataProvider {
             Section section = parseSection(courses, row.children().eachText());
 
             // reject linked and study abroad courses
-            if(section.getType() != Section.Type.LINKED && section.getType() != Section.Type.STUDY_ABROAD) {
+            if(section.getType() == Section.Type.STANDARD) {
                 section.getCourse().addSection(section);
             }
         }
