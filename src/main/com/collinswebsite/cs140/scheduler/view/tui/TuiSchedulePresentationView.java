@@ -54,6 +54,11 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
                     }
                     parameters.reject(sec);
                     iterator = parameters.produceStream().iterator(); // start over
+                    if(iterator.hasNext()) {
+                        schedule = iterator.next();
+                    } else {
+                        schedule = null;
+                    }
                     break;
                 case "detail":
                 case "details": // alias
