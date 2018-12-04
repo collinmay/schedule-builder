@@ -26,6 +26,7 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
             System.out.println("  next: Advance to next schedule.");
             System.out.println("  reject <line number>: Reject a particular section.");
             System.out.println("  detail: Show more details for the current schedule.");
+            System.out.println("  weight <dead|morning|days> <value>: Adjust weight for a specific metric.");
             System.out.println("  quit: Exit the program.");
 
             System.out.print("> ");
@@ -63,6 +64,37 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
                 case "detail":
                 case "details": // alias
                     detail = true;
+                    break;
+                case "weight":
+                    if(parts.length < 2) {
+                        System.out.println("Expected <dead|morning|days>.");
+                        break;
+                    }
+                    if(parts.length < 3) {
+                        System.out.println("Expected new weight value.");
+                        break;
+                    }
+                    double weight = Double.parseDouble(parts[2]);
+                    switch(parts[1]) {
+                        case "dead":
+                            parameters.weightDeadTime = weight;
+                            break;
+                        case "morning":
+                            parameters.weightMorningTax = weight;
+                            break;
+                        case "days":
+                            parameters.weightNumberOfDays = weight;
+                            break;
+                        default:
+                            System.out.println("Unknown metric: " + parts[1] + ".");
+                            break;
+                    }
+                    iterator = parameters.produceStream().iterator(); // start over
+                    if(iterator.hasNext()) {
+                        schedule = iterator.next();
+                    } else {
+                        schedule = null;
+                    }
                     break;
                 case "quit":
                 case "exit": // alias
