@@ -24,6 +24,6 @@ class TuiSchedulePresentationViewTest {
 
         Schedule schedule = new Schedule(Arrays.asList(test101a, test102b));
 
-        new TuiSchedulePresentationView().presentSchedule(schedule, true);
+        new TuiSchedulePresentationView().presentSchedule(schedule, true, new Parameters(null));
     }
 }

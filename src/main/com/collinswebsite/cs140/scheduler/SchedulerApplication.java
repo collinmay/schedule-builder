@@ -20,7 +20,7 @@ public class SchedulerApplication {
         CourseChooserView chooser = new TuiCourseChooserView();
         Set<Course> selectedCourses = chooser.chooseCourses(courses);
 
-        Parameters params = new Parameters(selectedCourses, Comparator.comparingInt(Schedule::calculateDeadTime));
+        Parameters params = new Parameters(selectedCourses);
         SchedulePresentationView presenter = new TuiSchedulePresentationView();
         presenter.present(params);
     }

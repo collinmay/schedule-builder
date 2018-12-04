@@ -12,18 +12,29 @@ import java.util.stream.Stream;
  */
 public class Parameters {
     private final List<List<Section>> selectedSections;
-    private Comparator<Schedule> comparator;
+    public double weightDeadTime = 1.0;
+    public double weightMorningTax = 1.0;
+    public double weightNumberOfDays = 300.0; // an extra day is worth a lot of dead time (split across the other days though)
+    // Future metrics:
+    //   - Evening tax
+    //   - Reduce dead time weight for periods longer than two hours
+    //   - Day efficiency (no days with only one class)
 
-    public Parameters(Set<Course> selectedCourses, Comparator<Schedule> comparator) {
+    public Parameters(Set<Course> selectedCourses) {
         this.selectedSections = selectedCourses.stream().map(Course::getSections).collect(Collectors.toList());
-        this.comparator = comparator;
     }
 
     /**
      * @return A stream of valid schedules in order by the current parameters
      */
     public Stream<Schedule> produceStream() {
-        return Schedule.generateCombinations(selectedSections).filter(Schedule::isValid).sorted(comparator);
+        return Schedule
+                .generateCombinations(selectedSections)
+                .filter(Schedule::isValid)
+                .sorted(Comparator.comparingDouble((schedule) ->
+                                schedule.calculateDeadTime() * weightDeadTime +
+                                schedule.morningTax() * weightMorningTax +
+                                schedule.numberOfDays() * weightNumberOfDays));
     }
 
     /**

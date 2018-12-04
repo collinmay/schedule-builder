@@ -17,7 +17,7 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
         boolean detail = false;
         while(true) {
             if(schedule != null) {
-                presentSchedule(schedule, detail);
+                presentSchedule(schedule, detail, parameters);
             } else {
                 System.out.println("No more schedules.");
             }
@@ -80,7 +80,7 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
         return String.format("%" + leftPad + "s" + "%s" + "%" + rightPad + "s", "", str, "");
     }
 
-    public void presentSchedule(Schedule schedule, boolean detailed) {
+    public void presentSchedule(Schedule schedule, boolean detailed, Parameters parameters) {
         final int TIME_COLUMN_WIDTH = 7;
         final int COLUMN_WIDTH = 25;
 
@@ -214,5 +214,8 @@ public class TuiSchedulePresentationView implements SchedulePresentationView {
         for(Section s : schedule.getSections()) {
             System.out.println("  - " + s.toString());
         }
+        System.out.println("Dead Time: " + schedule.calculateDeadTime() + " (weighted " + parameters.weightDeadTime + ")");
+        System.out.println("Morning Tax: " + schedule.morningTax() + " (weighted " + parameters.weightMorningTax + ")");
+        System.out.println("Number of Days: " + schedule.numberOfDays() + " (weighted " + parameters.weightNumberOfDays + ")");
     }
 }
