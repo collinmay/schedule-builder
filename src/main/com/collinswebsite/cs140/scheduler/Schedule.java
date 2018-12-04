@@ -79,6 +79,30 @@ public class Schedule {
         }).sum();
     }
 
+    public int numberOfDays() {
+        return Stream.of(Weekday.values()).mapToInt((weekday) -> timesOn(weekday).count() > 0 ? 1 : 0).sum();
+    }
+
+    public int morningTax() {
+        return (int) Stream.of(Weekday.values()).flatMapToDouble((weekday) -> timesOn(weekday).mapToDouble((tb) -> {
+            double tax = 0;
+            // poor man's definite integral; apply a tax for every minute before 10:00, with
+            // higher taxes the earlier the minute is.
+            // The minute at 10:00 has zero tax, and the minute at 7:00 counts as three dead minutes.
+            // That's one minute for every hour before 10:00.
+
+            // If the class ends before 10:00, we also count the time between when it ends and 10:00
+            // since that's still time I could've spent sleeping.
+
+            int threshold = 10 * 60; // 10:00
+            double deadMinutesPerHour = 1.0;
+            for(int t = tb.getBeginHour() * 60 + tb.getBeginMinute(); t < threshold; t++) {
+                tax+= deadMinutesPerHour * (threshold - t) / 60.0;
+            }
+            return tax;
+        })).sum();
+    }
+
     public boolean isValid() {
         return Stream.of(Weekday.values()).allMatch((weekday) -> {
            List<TimeBlock> times = timesOn(weekday).collect(Collectors.toList());
