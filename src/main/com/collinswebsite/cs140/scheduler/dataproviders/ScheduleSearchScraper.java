@@ -95,6 +95,15 @@ public class ScheduleSearchScraper implements DataProvider {
                 String endAmPm = tm.group(7);
 
                 // convert to military time for easier processing
+
+                // fix for midnight and noon
+                if(begHour == 12) {
+                    begHour = 0;
+                }
+                if(endHour == 12) {
+                    endHour = 0;
+                }
+
                 if(begAmPm.equals("P")) {
                     begHour += 12;
                 }
